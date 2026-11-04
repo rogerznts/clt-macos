@@ -49,8 +49,9 @@ segura o quadro antes de ele ir para a tela. Com isso, o jogo lê o mouse mais c
 
 O limitador deste pacote é uma `d3d11.dll` de ~14 KB, carregada antes da do DXMT (`d3d11=n,b`). Ela repassa
 `D3D11CreateDeviceAndSwapChain` ao DXMT e troca o `IDXGISwapChain::Present` da swapchain criada por uma versão que
-apresenta o quadro e só **depois** espera até o prazo do próximo. O jogo volta a ler o input logo após a espera,
-então o atraso fica igual ao de rodar sem limite, e o consumo cai para o de 60 FPS. O exe continua intacto.
+apresenta o quadro e só **depois** espera até o prazo do próximo. O jogo volta a ler o input logo após a espera, e
+o quadro pronto não fica parado na fila. O consumo cai para o de 60 FPS, e o mouse responde como sem limite (testado
+em tela cheia). O exe continua intacto.
 
 ## Requisitos
 
@@ -115,6 +116,7 @@ Os logs ficam em `~/Library/Application Support/CLT/`: `clt.log` (Wine) e `CLT_d
 | `packaging/wine-patches/winemac.drv/` | patch do driver macOS do Wine para o DXMT |
 | `packaging/brand_loader.py` | troca "Wine" por "CLT" no nome do app na barra de menus |
 | `packaging/make_icon.py` | gera o `.icns` a partir do ícone do `.exe` |
+| `packaging/framelimiter/` | `d3d11.dll` intermediária com o limitador de quadros (compilada com mingw-w64) |
 | `packaging/Info.plist` | metadados do bundle |
 
 ## Estado
@@ -124,7 +126,8 @@ Testado num MacBook Pro M2 Max com macOS 26.6.2 e C.L.T. 0.5.0, em tela cheia a 
 - abertura, tela de boas-vindas, menus e geração de mapa aleatório (Pequeno) funcionam;
 - no jogo, HUD, minimapa, NPCs, trânsito e polícia aparecem, e mouse e teclado respondem (o celular abre com
   `SETA CIMA`);
-- a renderização sai pelo Metal via DXMT, a 60 FPS travados, contra ~95–100 FPS sem limite;
+- a renderização sai pelo Metal via DXMT, com apresentação `Direct`. O limitador mantém ~60 FPS (HUD: 58–60 FPS,
+  17 ms por quadro), contra ~95–100 FPS sem limite, e o mouse responde como sem limite;
 - o C.L.T. procura atualização sozinho ao abrir, e o acesso à rede passa pelo WinHTTP do Wine;
 - o áudio sai pelo CoreAudio (`winecoreaudio.so`): com o jogo aberto, o `coreaudiod` mantém um stream de saída
   ativo nos alto-falantes, e ele some quando o jogo fecha (`pmset -g assertions`).
