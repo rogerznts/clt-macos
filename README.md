@@ -113,10 +113,11 @@ Testado num MacBook Pro M2 Max com macOS 26.6.2 e C.L.T. 0.5.0, em tela cheia a 
 - no jogo, HUD, minimapa, NPCs, trânsito e polícia aparecem, e mouse e teclado respondem (o celular abre com
   `SETA CIMA`);
 - a renderização sai pelo Metal via DXMT, a 60 FPS travados, contra ~95–100 FPS sem limite;
-- o C.L.T. procura atualização sozinho ao abrir, e o acesso à rede passa pelo WinHTTP do Wine.
+- o C.L.T. procura atualização sozinho ao abrir, e o acesso à rede passa pelo WinHTTP do Wine;
+- o áudio sai pelo CoreAudio (`winecoreaudio.so`): com o jogo aberto, o `coreaudiod` mantém um stream de saída
+  ativo nos alto-falantes, e ele some quando o jogo fecha (`pmset -g assertions`).
 
-Não verificados ainda: áudio (não foi ouvido durante o teste), controle (gamepad), partidas longas, mapas
-Gigante/Colossal e o botão "Enviar Feedback".
+Não verificados ainda: controle (gamepad), partidas longas, mapas Gigante/Colossal e o botão "Enviar Feedback".
 
 ## Licenças
 
