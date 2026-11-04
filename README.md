@@ -25,6 +25,7 @@ flowchart LR
 | DXMT 0.80 | [3Shain/dxmt](https://github.com/3Shain/dxmt) | Direct3D 11 traduzido para Metal |
 | `winemac.so` corrigido | `packaging/wine-patches/` sobre o fonte do Wine 11.21 | expõe ao DXMT a view Metal da janela (ver abaixo) |
 | Rosetta 2 | macOS | executa o código x86-64 em Apple Silicon |
+| limitador de quadros | `packaging/framelimiter/` | `d3d11.dll` intermediária, ao lado do jogo: limita o FPS sem atrasar o mouse (ver abaixo) |
 
 Como o binário não é alterado, **atualizar o jogo é só trocar o `.exe`** (ver "Atualizar o jogo").
 
@@ -39,6 +40,17 @@ ela, a tela fica preta e o log mostra `Failed to create metal view`. O patch tem
   cada frame.
 
 O `build.sh` compila só esse módulo, com o mesmo fonte do Wine que gerou o resto do pacote.
+
+### O limitador de quadros
+
+Sem limite, o jogo roda a ~95–100 FPS e aquece o Mac. O limitador do próprio DXMT (`d3d11.preferredMaxFrameRate`)
+segura o quadro antes de ele ir para a tela. Com isso, o jogo lê o mouse mais cedo, e na prática o mouse ficava
+"agarrado".
+
+O limitador deste pacote é uma `d3d11.dll` de ~14 KB, carregada antes da do DXMT (`d3d11=n,b`). Ela repassa
+`D3D11CreateDeviceAndSwapChain` ao DXMT e troca o `IDXGISwapChain::Present` da swapchain criada por uma versão que
+apresenta o quadro e só **depois** espera até o prazo do próximo. O jogo volta a ler o input logo após a espera,
+então o atraso fica igual ao de rodar sem limite, e o consumo cai para o de 60 FPS. O exe continua intacto.
 
 ## Requisitos
 
@@ -81,7 +93,7 @@ prefixo.
 
 | variável | padrão | efeito |
 |---|---|---|
-| `CLT_MAX_FPS` | `60` | limite de quadros, controlado pelo Metal; precisa dividir a taxa da tela: 30, 60 ou 120. `0` desliga o limite |
+| `CLT_MAX_FPS` | `60` | limite de quadros, aplicado pela `d3d11.dll` intermediária logo após cada `Present`. Aceita qualquer valor (por exemplo `90`); `0` desliga o limite |
 | `WINEDEBUG` | `-all` | logs do Wine, por exemplo `fixme-all` para diagnóstico |
 | `MTL_HUD_ENABLED` | — | `1` mostra o HUD do Metal: FPS, GPU e confirmação de que o DXMT está ativo |
 

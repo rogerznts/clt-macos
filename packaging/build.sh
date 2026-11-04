@@ -63,6 +63,8 @@ install_name_tool -id winemac.so "$W/x86_64-unix/winemac.so" 2>/dev/null
 codesign -f -s - "$W/x86_64-unix/winemac.so" 2>/dev/null
 python3 "$ROOT/packaging/brand_loader.py" "$W/x86_64-unix/wine" CLT
 cp -c "$EXE" "$APP/Contents/Resources/game/CLT.exe"
+x86_64-w64-mingw32-gcc -O2 -shared -s -Wall -static-libgcc -o "$APP/Contents/Resources/game/d3d11.dll" \
+	"$ROOT/packaging/framelimiter/d3d11_proxy.c" "$ROOT/packaging/framelimiter/d3d11.def"
 cp "$ROOT/packaging/Info.plist" "$APP/Contents/Info.plist"
 cp "$ROOT/packaging/launcher.sh" "$APP/Contents/MacOS/CLT"
 chmod +x "$APP/Contents/MacOS/CLT"

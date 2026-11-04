@@ -8,13 +8,13 @@ WINE_ROOT="$RES/wine"
 SUPPORT="$HOME/Library/Application Support/CLT"
 export WINEPREFIX="$SUPPORT/prefix"
 export WINEDEBUG="${WINEDEBUG:--all}"
-export WINEDLLOVERRIDES="d3d11,dxgi,d3d10core=b;winemenubuilder.exe=d"
+# d3d11=n,b: the frame-limiter proxy next to CLT.exe loads first and forwards to DXMT's builtin d3d11.
+export WINEDLLOVERRIDES="d3d11=n,b;dxgi,d3d10core=b;winemenubuilder.exe=d"
 export WINEMSYNC=1 WINEESYNC=1
 export DXMT_LOG_PATH="$SUPPORT"
-# Metal-paced frame cap (must divide the display refresh: 60 fits 60 Hz and 120 Hz ProMotion).
-# Override: open --env CLT_MAX_FPS=120 CLT.app, or CLT_MAX_FPS=0 for uncapped.
-CLT_MAX_FPS="${CLT_MAX_FPS:-60}"
-[ "$CLT_MAX_FPS" != 0 ] && export DXMT_CONFIG="d3d11.preferredMaxFrameRate=$CLT_MAX_FPS;${DXMT_CONFIG:-}"
+# Frame cap, applied by the d3d11 proxy right after each Present so input is read fresh (packaging/framelimiter/).
+# Override: open --env CLT_MAX_FPS=90 CLT.app, or CLT_MAX_FPS=0 for uncapped.
+export CLT_MAX_FPS="${CLT_MAX_FPS:-60}"
 export PATH="$WINE_ROOT/bin:$PATH"
 LOG="$SUPPORT/clt.log"
 GAME_DIR="$WINEPREFIX/drive_c/Program Files/CLT"
@@ -34,6 +34,7 @@ fi
 # (shader cache, settings). Replacing Resources/game/CLT.exe is the whole update procedure.
 mkdir -p "$GAME_DIR"
 ln -sfn "$RES/game/CLT.exe" "$GAME_DIR/CLT.exe"
+ln -sfn "$RES/game/d3d11.dll" "$GAME_DIR/d3d11.dll"
 
 cd "$GAME_DIR"
 exec "$WINE_ROOT/bin/wine" "C:\\Program Files\\CLT\\CLT.exe" "$@" >>"$LOG" 2>&1
