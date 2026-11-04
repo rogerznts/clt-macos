@@ -118,5 +118,7 @@ Testado num MacBook Pro M2 Max com macOS 26.6.2 e C.L.T. 0.5.0, em tela cheia a 
 Não verificados ainda: áudio (não foi ouvido durante o teste), controle (gamepad), partidas longas, mapas
 Gigante/Colossal e o botão "Enviar Feedback".
 
+## Licenças
+
 C.L.T. © Uniday Studio. Wine é LGPL-2.1. DXMT 0.80 é MIT. Os scripts deste repositório são de uso pessoal para rodar
 uma cópia legítima do jogo.
