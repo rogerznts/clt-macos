@@ -98,14 +98,62 @@ prefixo.
 | `WINEDEBUG` | `-all` | logs do Wine, por exemplo `fixme-all` para diagnóstico |
 | `MTL_HUD_ENABLED` | — | `1` mostra o HUD do Metal: FPS, GPU e confirmação de que o DXMT está ativo |
 
-Como passar as variáveis:
+Como passar as variáveis (feche o jogo antes de abrir de novo com outro valor):
 
 ```bash
-open --env CLT_MAX_FPS=120 build/CLT.app
-open --env MTL_HUD_ENABLED=1 build/CLT.app
+open build/CLT.app                               # padrão: 60 FPS
+open --env CLT_MAX_FPS=45 build/CLT.app          # mais frio e silencioso
+open --env CLT_MAX_FPS=90 build/CLT.app          # mais fluido, mais quente
+open --env CLT_MAX_FPS=0 build/CLT.app           # sem limite (~95–100 FPS num M2 Max)
+open --env MTL_HUD_ENABLED=1 build/CLT.app       # HUD do Metal: FPS, tempo de GPU, DXMT ativo
+open --env CLT_MAX_FPS=45 --env MTL_HUD_ENABLED=1 build/CLT.app   # dá para combinar
 ```
 
+Se o app estiver em `/Applications`, troque `build/CLT.app` por `/Applications/CLT.app`.
+
 Os logs ficam em `~/Library/Application Support/CLT/`: `clt.log` (Wine) e `CLT_d3d11.log` (DXMT).
+
+## Desempenho e temperatura
+
+### Histórico do limite de quadros
+
+| tentativa | resultado |
+|---|---|
+| sem limite | mouse solto, mas ~95–100 FPS, GPU no máximo e fans altas |
+| limitador do DXMT (`d3d11.preferredMaxFrameRate=60`) | 60 FPS, mas o mouse fica "agarrado": o Metal segura o quadro antes da tela, e o jogo lê o input mais cedo |
+| `d3d11.dll` intermediária (atual) | 60 FPS e mouse igual a sem limite: a espera vem **depois** do `Present` (ver "O limitador de quadros") |
+
+### De onde vem o calor
+
+Medido no M2 Max em partida, a 60 FPS, no preset gráfico "Alta" (o padrão do jogo):
+
+| medida | valor |
+|---|---|
+| CPU do `CLT.exe` (`top`) | ~2–8% de um núcleo |
+| utilização da GPU (`ioreg -r -c IOAccelerator`) | 50–90% |
+| GPU por quadro (HUD do Metal) | 10–11 ms, com picos de 23 ms |
+
+O gargalo é a GPU, pelo trabalho que o próprio jogo pede. A tradução feita pelo Rosetta e pelo Wine pesa pouco. O exe
+descreve assim os presets de "Qualidade Gráfica":
+
+| preset | MSAA | sombra do sol | HBAO | bloom/FXAA |
+|---|---|---|---|---|
+| Muito Baixa | não | sem sombra | não | não |
+| Baixa | não | 1024 | não | sim |
+| Média | 2x | 2048 | sim | sim |
+| Alta | 4x | 4096 | sim | sim |
+
+Temperaturas na casa dos 94 °C sob carga de GPU estão dentro do que o chip aguenta: ele reduz o clock sozinho antes
+de qualquer risco. O incômodo é o barulho das fans. Para esfriar, do maior efeito para o menor:
+
+1. **Gráficos no jogo** (Configurações → Gráficos): "Qualidade Gráfica" Média ou Baixa, e "Resolução da Cena" 75%
+   (cerca de 44% menos pixels).
+2. **Limite de FPS menor:** o trabalho da GPU cai quase na proporção. A 45 FPS é uns 25% a menos que a 60
+   (`open --env CLT_MAX_FPS=45 build/CLT.app`).
+3. **Modo de Pouca Energia do macOS** (Ajustes → Bateria, ou `sudo pmset -a lowpowermode 1`): reduz o clock da GPU
+   e da CPU, ao custo de alguns FPS.
+
+Ponto de partida sugerido: Média com 75% de resolução, a 60 FPS. Se ainda esquentar, baixe o limite para 45.
 
 ## Estrutura
 
